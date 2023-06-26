@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>UI design for California housing dataset</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+  </head>
+  <body>
+    <h1>Predictions on California housing prices</h1>
+    <p>
+      Based on given instances. Hover mouse over feature names for more details.
+    </p>
+
+    <style>
+      /* styling for page containers */
+
+      .page {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .rect1 {
+        display: flex;
+        margin-bottom: 20px;
+      }
+
+      .rect2 {
+        display: flex;
+        margin-right: 230mm;
+        flex-direction: column;
+        /* justify-content: center; */
+        align-items: center;
+      }
+
+      .rect2 p {
+        margin-top: 0.2em; /* Adjust the value as needed */
+        margin-bottom: 0em; /* Adjust the value as needed */
+      }
+
+      .red-word {
+        color: red;
+        display: inline;
+      }
+
+      .blue-word {
+        color: blue;
+        display: inline;
+      }
+
+      table {
+        border-collapse: collapse;
+        border: none;
+        margin-right: 0;
+      }
+
+      /* styling for right brace */
+
+      div {
+        padding: none;
+      }
+
+      span {
+        width: 10px;
+        height: calc(50% - 10px);
+        display: inline-block;
+      }
+
+      .left-brace-tl {
+        border-right: 2px solid black;
+        border-bottom-right-radius: 10px;
+        margin-right: -6px;
+        margin-top: 10px;
+      }
+
+      .left-brace-tr {
+        margin-bottom: 10px;
+        border-left: 2px solid black;
+        border-top-left-radius: 10px;
+      }
+
+      .left-brace-bl {
+        margin-top: -4px;
+        border-right: 2px solid black;
+        border-top-right-radius: 10px;
+        margin-right: -6px;
+      }
+
+      .left-brace-br {
+        margin-bottom: -8px;
+        border-left: 2px solid black;
+        border-bottom-left-radius: 10px;
+      }
+
+      .right-border {
+        -webkit-transform: rotate(180deg);
+        -moz-transform: rotate(180deg);
+        -o-transform: rotate(180deg);
+        -ms-transform: rotate(180deg);
+        transform: rotate(180deg);
+      }
+
+      /* styling for content and images */
+
+      .content {
+        display: flex;
+        align-items: center;
+      }
+
+      .container .box {
+        width: 50%;
+        display: flex;
+        padding: none;
+        border: none;
+      }
+
+      .bracket {
+        display: flex;
+        margin-top: 9mm;
+      }
+
+      .plusImage {
+        display: flex;
+        align-items: center;
+        margin-top: 9mm;
+      }
+
+      .rightArrow {
+        display: flex;
+        align-items: center;
+        margin-top: 9mm;
+        margin-left: 1mm;
+        color: black;
+        font-weight: bold;
+      }
+
+      /* styling for data table */
+
+      .data td {
+        border: 1px solid black;
+        padding: 8px;
+      }
+
+      /* color the rightmost column blue */
+      .data tr:nth-child(n + 2) td:nth-child(4) {
+        background-color: lightblue;
+        border: none;
+        border-left: 1px solid black;
+        border-right: 1px solid black;
+        text-align: right;
+        width: 55px;
+      }
+
+      .data tr:last-child td:last-child {
+        border-bottom: 1px solid black;
+      }
+
+      /* make second column right-aligned */
+      .data tr:nth-child(n + 2) td:nth-child(2) {
+        text-align: right;
+        width: 55px;
+      }
+
+      .data tr:nth-child(1) td:nth-child(4) {
+        border: none;
+        border-bottom: 1px solid black;
+      }
+
+      /* right align first column and remove borders */
+      .data td:first-child,
+      .data td:nth-child(3) {
+        text-align: right;
+        border: none;
+      }
+
+      /* remove border of first and last element in second column */
+      .data tr:last-child td:nth-child(2),
+      .data tr:nth-child(1) td:nth-child(2) {
+        border: none;
+      }
+
+      .data tr:first-child {
+        text-align: center;
+      }
+
+      /* styling for explanation */
+      .explanationContent {
+        display: flex;
+        align-items: center;
+        margin-top: 9mm;
+      }
+
+      .explanation td {
+        padding: 4px;
+        text-align: center;
+        width: 120px;
+        height: 23px; /* Set the desired height for the cells */
+      }
+
+      .explanation td.explanation-cell {
+        border: 1px solid black;
+        margin-top: -8px;
+      }
+
+      /* styling for prediction */
+      .predictionContent {
+        display: flex;
+        align-items: center;
+        margin-top: 12.5mm;
+      }
+
+      .prediction td {
+        padding: 4px;
+        /* border: 1px solid black; */
+        text-align: center;
+        width: 200px;
+        height: 23px; /* Set the desired height for the cells */
+      }
+
+      .prediction-cell input[type="text"] {
+        width: 80%;
+        height: 140%;
+        box-sizing: border-box;
+        text-align: center;
+        font-family: inherit;
+        font-size: inherit;
+      }
+
+      .bonus-cell {
+        height: 29px;
+      }
+    </style>
+
+    <div class="page">
+      <div class="rect1">
+        <div class="content">
+          <div id="tableContainer"></div>
+        </div>
+
+        <div class="bracket">
+          <div class="right-border">
+            <span class="left-brace-tl"></span>
+            <span class="left-brace-tr"></span><br />
+            <span class="left-brace-bl"></span>
+            <span class="left-brace-br"></span>
+          </div>
+        </div>
+
+        <div class="plusImage">
+          <img
+            src="https://cdn.onlinewebfonts.com/svg/img_51677.png"
+            width="20"
+            height="20"
+          />
+        </div>
+
+        <div class="rightArrow">
+          <p>→</p>
+        </div>
+
+        <div class="explanationContent">
+          <table class="explanation">
+            <tr>
+              <td>Explanation</td>
+            </tr>
+            <tr>
+              <td class="explanation-cell" id="explanationCell"></td>
+            </tr>
+            <tr>
+              <td></td>
+            </tr>
+          </table>
+        </div>
+
+        <div class="predictionContent">
+          <table class="prediction">
+            <tr>
+              <td>Prediction</td>
+            </tr>
+            <tr>
+              <td class="prediction-cell">
+                <input
+                  type="text"
+                  id="predictionCell"
+                  placeholder="Enter your answer"
+                />
+              </td>
+            </tr>
+            <tr>
+              <td class="bonus-cell">
+                <span class="blue-word">Bonus</span>: up to $0.10 for being
+                close to correct answer.
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="rect2">
+        <button type="button" onclick="update()">New Explanation</button>
+        <p><span class="red-word">Avoid</span> using new explanation.</p>
+        <p>
+          <span class="blue-word">Bonus:</span> $0.10 for each case without new
+          explanation.
+        </p>
+      </div>
+    </div>
+
+    <script>
+      // prediction input only allow numbers and auto-format commas
+      var inputField = document.querySelector("input");
+      inputField.oninput = function () {
+        var removeChar = this.value.replace(/[^0-9\.]/g, ""); // This is to remove alphabets and special characters.
+        // console.log(removeChar);
+        var removeDot = removeChar.replace(/\./g, ""); // This is to remove "DOT"
+        this.value = removeDot;
+
+        var formatedNumber = this.value.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        // console.log(formatedNumber);
+        this.value = "$" + formatedNumber;
+      };
+
+      // Get table data, cells formatted as '(value, weight)' for each feature (for adjustment and truth, 'value')
+      function parseCSV() {
+        return new Promise((resolve, reject) => {
+          d3.csv("output.csv")
+            .then((data) => {
+              resolve(data);
+            })
+            .catch((error) => {
+              reject(error);
+            });
+        });
+      }
+
+      var allData, descriptions, features;
+      parseCSV()
+        .then((parsedData) => {
+          // Access the parsed CSV data and run the rest of the code
+          console.log("CSV file loaded successfully!");
+          console.log(parsedData);
+
+          // Discovering column names
+          features = Object.keys(parsedData[0]);
+
+          // Handle similarities at beginning of columns
+          features = features.slice(50);
+          console.log(features);
+          numRows = features.length - 1;
+
+          createTable(numRows);
+          descriptions = parsedData[0];
+          allData = parsedData.slice(1);
+          update();
+        })
+        .catch((error) => {
+          // Handle any errors that occurred during parsing
+          console.error(error);
+        });
+
+      function format(number) {
+        let fNum = number.toLocaleString("en-US", {
+          style: "currency",
+          currency: "USD",
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
+        });
+        return fNum;
+      }
+
+      function createTable(numRows) {
+        const table = document.createElement("table");
+        table.setAttribute("border", "1");
+
+        const headerRow = document.createElement("tr");
+        const headerCells = ["", "Values", "", "Weights"];
+
+        headerCells.forEach((headerText) => {
+          const headerCell = document.createElement("td");
+          headerCell.textContent = headerText;
+          headerRow.appendChild(headerCell);
+        });
+
+        table.appendChild(headerRow);
+
+        for (let i = 0; i < numRows; i++) {
+          const row = document.createElement("tr");
+          for (let j = 0; j < 4; j++) {
+            const cell = document.createElement("td");
+            row.appendChild(cell);
+          }
+          table.appendChild(row);
+        }
+
+        // Append the table to a container element in your HTML
+        const container = document.getElementById("tableContainer");
+        container.appendChild(table);
+        table.classList.add("data");
+      }
+
+      // Update table
+      function update() {
+        var explanationValue = 0;
+        // i = 9;
+        i = Math.floor(Math.random() * 51); // Generates a random integer between 0 and 50 (inclusive)
+        tableData = allData[i]; // tableData = {'Feature name': (value, weight), ...}
+        console.log("table data: ", tableData);
+
+        // Get the table rows excluding the header
+        const tableRows = document.querySelectorAll(
+          "table.data tr:not(:first-child)"
+        );
+
+        // Update the table cells with the data
+        tableRows.forEach((row, index) => {
+          const cells = row.querySelectorAll("td");
+
+          cells[0].textContent = features[index]; // feature name
+          cells[0].title = descriptions[features[index]]; // feature description
+
+          if (features[index] == "adjustment") {
+            cells[2].textContent = "+";
+            adjustment = parseFloat(tableData[features[index]]);
+            cells[3].textContent = format(adjustment);
+            explanationValue += adjustment;
+          } else {
+            featureData = tableData[features[index]];
+            var numberValues = featureData.match(/-?\d+(\.\d+)?/g); // Extract numeric values using regular expression
+            var fValue = parseFloat(numberValues[0]); // Parse the feature value
+            var fWeight = parseFloat(numberValues[1]); // Parse the feature weight
+            cells[1].textContent = fValue;
+            cells[2].textContent = "×"; // operator
+            cells[3].textContent = format(fWeight);
+            explanationValue = explanationValue + fValue * fWeight; // Update explanation value
+          }
+        });
+
+        // Set explanation value
+        const expCell = document.getElementById("explanationCell");
+        explanationValue = Math.round(explanationValue / 10000) * 10000;
+        expCell.textContent = format(explanationValue);
+        console.log("explanation: ", format(explanationValue));
+      }
+    </script>
+  </body>
+</html>
